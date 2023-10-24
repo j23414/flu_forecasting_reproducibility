@@ -27,7 +27,7 @@ cd flu-forecasting
 
 # Antigenic drift
 
-Antigenic novelty metric, extended from the "cross-immunity" metric from Luksza and Lassig, 2014. 
+Antigenic novelty metric, extended from the "cross-immunity" metric from [Luksza and Lassig, 2014](https://www.nature.com/articles/nature13087). 
 
 $$
 \begin{align*}

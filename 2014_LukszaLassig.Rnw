@@ -1,0 +1,142 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=0.5in,top=1in,bottom=0.75in]{geometry}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage[table]{xcolor}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+
+\usepackage{multicol}
+\usepackage{graphicx}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{A predictive fitness model for influenza (last update: \today)}
+\rhead{FredHutch: Bedford Lab}
+
+\begin{document}
+
+<<echo=FALSE, message=FALSE, warning=FALSE>>=
+library(tidyverse)
+library(magrittr)
+@
+
+\section*{Publication}
+
+Łuksza, M. and Lässig, M., 2014. A predictive fitness model for influenza. Nature, 507(7490), pp.57-61.
+
+\section*{Equations}
+
+\textbf{Predect next season's frequencies $X$ for clade $v$ based on prior season}
+
+\begin{align*}
+X_v(t) &= \sum_{i:v,t}x_i && \text{Observed frequency $X$ of clade $v$ at a given season $t$ for strain $i$}\\
+f_i& && \text{Malthusian fitness or growth rate, measured in units of 1yr}\\
+\hat{X_v}(t+1) &= \sum_{i:v,t} x_i exp(f_i) && \text{Predicted frequency of that clade in season 1 year or later}
+\end{align*}
+
+<<fig.width=3, fig.height=3, echo=FALSE, message=FALSE, warning=FALSE>>==
+#data <- data.frame(t=c(1:5), v=c("A","A","B","B","C"))
+#data %>%
+#  ggplot(., aes(x=t, y=v)) +
+#  geom_point()
+@
+
+\noindent
+\textbf{Strain fitness where mutations in epitope regions confer postive and non-epitope regions are negative}
+
+\begin{align*}
+\mathcal{C}(a_i,a_j)& && \text{Cross-immunity amplitude: antigenic similarity of strains $i$ and $j$}\\
+\mathcal{L}(a_i)& && \text{Fitness cost: cumulative effect of recent non-epitope amino acid changes}\\
+f_i &= f_0-\mathcal{L}(a_i)-\sum_{j:t_j < t_i} x_j \mathcal{C}(a_i,a_j) && \text{Strain fitness}
+\end{align*}
+
+\begin{align*}
+\hat{W}_v &= \frac{\hat{X}_v(t+1)}{X_v(t)} && \text{Wrightian fitness: i.e. if next season is larger than prior season then $W_v > 1$}
+\end{align*}
+
+
+\noindent
+\textbf{Vaccine selection}
+
+\begin{align*}
+\mathcal{C}_v (t) &= \sum_{i:t} x_i \mathcal{C}(a_i,a_v) && \text{Average cross-immunity between vaccine strain and the circulating strain in a given season}\\
+\hat{\mathcal{C}}_v (t+1) &= \sum_{i:t} x_i \mathcal{C}(a_i,a_v) exp(f_i) &&\text{Optimal vaccine maximizes this reduction}
+\end{align*}
+
+\noindent
+\textbf{Methods summary}
+
+\begin{align*}
+t&=\text{Season starting in October year $y$ -1 to April year $y$}\\
+a_v&=\text{Given HA sequence that is the common clade ancester}\\
+\mathcal{D}_{ep}&=\text{Linear amino acid distance between pairs of sequences in epitope codons}\\
+c(\mathcal{D}_{ep})&=exp\left(\frac{-\mathcal{D}_{ep}}{\mathcal{D}_0}\right)=\text{nonlinear cross-immunity amplitude}\\
+f^{ep}_i&=\sigma_{ep} \sum _{j:t_j<t_i} x_j c(\mathcal{D}_{ep}(a_i, a_j))\\
+f^{ne}_i&=-\sigma_{ep}\mathcal{D}_{ne}
+(a_i,a_i^*) \\
+a_i^*&=\text{last ancestor of strain $i$ in a previous season}
+\end{align*}
+
+\section*{Assumptions}
+
+\begin{itemize}
+\item{Clades are geographically well-mixed}
+\item{Clade frequencies are sufficiently large to measure $X_v(t) > 0.15$}
+\item{Each strain has a Malthusian fitness or growth rate $f_i$}
+\item{Epitope changes are predominantly under positive selection}
+\item{Non-epitope mutations are predominantly under negative selection}
+\item{SIR}
+\item{Ignores higher-order antigenic interactions of more than two strains}
+\item{Ignores birth-death turnover of the host population}
+\end{itemize}
+
+\newpage
+
+\section*{Publication}
+
+Huddleston, J., Barnes, J.R., Rowe, T., Xu, X., Kondor, R., Wentworth, D.E., Whittaker, L., Ermetal, B., Daniels, R.S., McCauley, J.W. and Fujisaki, S., 2020. Integrating genotypes and phenotypes improves long-term forecasts of seasonal influenza A/H3N2 evolution. Elife, 9, p.e60067.
+
+
+\begin{align*}
+\frac{1}{Z(t)}&=\text{Normalized to 1} && \\
+\hat{x_i}(t+\delta t) &=\frac{1}{Z(t)} x_i(t)exp(f_i(t)\delta t) && \text{Estimated future frequency of each strain $i$}\\
+f_i(t)&=\beta_{ne}f_{i,ml}(t)+\beta_{lbi}f_{i,lbi}(t) && \text{Additive model of various fitness terms}\\
+u&=t+1 && \text{time unit comparison}\\
+h(s_i,s_j)&=\text{hamming distance between strain $i$ and strain $j$}\\
+d_i(u)&=\sum_{j\in s(u)} x_j(u)h(s_i,s_j) && \text{strain-specific distance to the future}\\
+d_i(\hat{u})&=\sum_{j\in s(\hat{u})} x_j(\hat{u})h(s_i,s_j) && \text{Estimated ... strain-specific distance to the future}\\
+f_{i,ep}(t)&=\sum_{j:t_j<t_i} - max(x_j)exp\left(\frac{-\mathcal{D}_{ep}(a_i,a_j)}{\mathcal{D}_0}\right) && \text{Antigenic drift}\\
+f_{i,DMS}(t)&=\sum_{r\in r, a_i!=r,a_j} log_2 \frac{\pi_{r,a_i}}{\pi_{r,a_j}} && \text{Functional constraint}
+\end{align*}
+
+\newpage
+
+\section*{Publication}
+
+Neher, Richard A., Colin A. Russell, and Boris I. Shraiman. "Predicting evolution from the shape of genealogical trees." Elife 3 (2014): e03568.
+
+\begin{align*}
+m_{\uparrow i}&=\tau \left( 1 - e^{\frac{-b_i}{\tau}}\right)+e^{\frac{-b_i}{\tau}} \sum_{j} m_{\uparrow i_j} && \text{up-messages of the parent of node $i$}\\
+m_{\downarrow i}&=\tau \left( 1 - e^{\frac{-b_i}{\tau}}\right)+e^{\frac{-b_i}{\tau}} \left[ m_{\downarrow i} + \sum_{k \ne j} m_{\uparrow i_k} \right] && \text{down-messages of the children of node $i$} \\
+\lambda_i(\tau)&=m_{\downarrow i} + \sum_{j} m_{\downarrow i_{j}} && \text{Exponentially discounted tree length}
+\end{align*}
+
+\begin{align*}
+
+\end{align*}
+P(n|x, t) & && \text{number of offspring $n$ after time $t$ given the ancestor had fitness $x$}
+P(n|x, t, t+\delta t) &= [1 - \delta t (2+x+u)] P(n|x,t) + \delta t <uP(n|x+s,t)>  && \text{backward master equation}
+\end{document}
+
